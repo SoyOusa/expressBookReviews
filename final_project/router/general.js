@@ -3,7 +3,7 @@ let books = require("./booksdb.js");
 let isValid = require("./auth_users.js").isValid;
 let users = require("./auth_users.js").users;
 const public_users = express.Router();
-
+const axios = require('axios')
 //Task 6:
 public_users.post("/register", (req,res) => {
   //Write your code here
@@ -29,55 +29,97 @@ public_users.post("/register", (req,res) => {
 });
 
 
-//TASK 1:
+//TASK 1+ 10:
 // Get the book list available in the shop
-public_users.get('/',function (req, res) {
+public_users.get('/',async function (req, res) {
   //Write your code here
-  return res.status(200).json(books);
+  try {
+    const response = await Promise.resolve({
+        data: books
+    });
+    return res.status(200).json(books);
+  } catch (error) {
+    return res.status(500).json({
+        message: "Error Retrieving Books"
+    });
+  }
+  
 });
 
 
-//TASK 2:
+//TASK 2 + 11 :
 // Get book details based on ISBN
 public_users.get('/isbn/:isbn',function (req, res) {
   //Write your code here
   const isbn = req.params.isbn; 
-  if (book[isbn]) {
+
+  axios
+  .get(`http://localhost:5000/api/books/isbn/${isbn}`)
+  .then(response =>{
+    return res.status(200).json(response.data);
+  })
+  .catch(error =>{
+    if (books[isbn]) {
     return res.status(200).json(books[isbn]);
-  } else return res.status(404).json({message: "Book not Found "});
+  }
+    return res.status(404).json({
+        message: "Book not Found "
+    });
+
+  });
+   
  });
 
-//TASK 3:
+//TASK 3+ 12:
 //Get book details based on author
 public_users.get('/author/:author',function (req, res) {
   //Write your code here
   const author = req.params.author;
-  const booksByAuthor = [];
+  axios
+  .get(`http://localhost:5000/api/books/author/${encodeURIComponent(author)}`)
+  .then(response=>{
+    return res.status(200).json(response.data);
+  })
+  .catch (error =>{
+    const author = req.params.author;
+    const booksByAuthor = [];
 
-  const keys = Object.keys(books);
-  keys.forEach((isbn) =>{
-    if (books[isbn].author === author) {
-        booksByAuthor.push(books[isbn]);
-    }
+    const keys = Object.keys(books);
+    keys.forEach((isbn) =>{
+        if (books[isbn].author === author) {
+            booksByAuthor.push(books[isbn]);
+        }
+    });
+    return res.status(200).json(booksByAuthor);
   });
-  return res.status(200).json(booksByAuthor);
+
+  
 });
 
-//TASK 4:
+//TASK 4+13:
 // Get all books based on title
 public_users.get('/title/:title',function (req, res) {
   //Write your code here
-
-  const title = get.params.title;
-  const booksByTitle = [];
-
-  const keys = Object.keys(books);
-  keys.forEach((isbn) =>{
-    if(books[isbn].title === title){
-        booksByTitle.push(books[isbn]);
-    }
+  const title = req.params.title;
+  axios
+  .get(`http://localhost:5000/api/books/title/${encodeURIComponent(title)}`)
+  .then(response=>{
+    return res.status(200).json(response.data);
   })
-  return res.status(200).json(booksByTitle);
+  .catch (error =>{
+    const title = req.params.title;
+    const booksByTitle = [];
+
+    const keys = Object.keys(books);
+    keys.forEach((isbn) =>{
+        if (books[isbn].title === title) {
+            booksByTitle.push(books[isbn]);
+        }
+    });
+    return res.status(200).json(booksByTitle);
+  });
+
+  
 });
 
 //TASK 5:
